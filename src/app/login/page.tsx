@@ -12,7 +12,12 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
     setLoading(false);
     if (!error) setSent(true);
   }
