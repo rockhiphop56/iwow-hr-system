@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"];
+const ONBOARDING_PATH = "/onboarding";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -34,7 +35,9 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // 未登入 → 導向 /login
   if (!user) {
@@ -50,6 +53,19 @@ export async function middleware(request: NextRequest) {
       { error: "No tenant assigned to this user" },
       { status: 403 }
     );
+  }
+
+  // 檢查是否已完善個人資料
+  const profileCompleted = user.user_metadata?.profile_completed;
+
+  if (!profileCompleted && !pathname.startsWith(ONBOARDING_PATH)) {
+    // 尚未完善資料 → 導向 /onboarding
+    return NextResponse.redirect(new URL(ONBOARDING_PATH, request.url));
+  }
+
+  if (profileCompleted && pathname.startsWith(ONBOARDING_PATH)) {
+    // 已完成但又訪問 onboarding → 導回 dashboard
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
   // 注入 tenant_id 到 request header 供 Server Components 使用

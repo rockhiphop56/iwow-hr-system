@@ -1,18 +1,34 @@
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { EmployeeTable } from "@/components/dashboard/EmployeeTable";
 import { DepartmentTree } from "@/components/dashboard/DepartmentTree";
-import { getDashboardStats, getEmployeesWithAssignments } from "@/services/employees.service";
-import { getDepartments } from "@/services/departments.service";
-import { buildDeptTree } from "@/services/departments.service";
+import {
+  getDashboardStats,
+  getEmployeesWithAssignments,
+} from "@/services/employees.service";
+import { getDepartments, buildDeptTree } from "@/services/departments.service";
 
 export default async function DashboardPage() {
-  const [stats, employees, departments] = await Promise.all([
-    getDashboardStats(),
-    getEmployeesWithAssignments(),
-    getDepartments(),
-  ]);
+  let stats = {
+    totalEmployees: 0,
+    totalDepartments: 0,
+    totalMentorships: 0,
+    activeAssignments: 0,
+  };
+  let employees: Awaited<ReturnType<typeof getEmployeesWithAssignments>> = [];
+  let deptTree: ReturnType<typeof buildDeptTree> = [];
 
-  const deptTree = buildDeptTree(departments);
+  try {
+    const [s, e, d] = await Promise.all([
+      getDashboardStats(),
+      getEmployeesWithAssignments(),
+      getDepartments(),
+    ]);
+    stats = s;
+    employees = e;
+    deptTree = buildDeptTree(d);
+  } catch (err) {
+    console.error("Dashboard data fetch failed:", err);
+  }
 
   return (
     <div className="space-y-8">
@@ -29,13 +45,10 @@ export default async function DashboardPage() {
 
       {/* Content Grid */}
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        {/* Employee Table */}
         <div className="lg:col-span-2">
           <h2 className="mb-4 text-lg font-semibold">員工列表</h2>
           <EmployeeTable employees={employees} />
         </div>
-
-        {/* Department Tree */}
         <div>
           <h2 className="mb-4 text-lg font-semibold">組織架構</h2>
           <div className="card">
