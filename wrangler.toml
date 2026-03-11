@@ -1,10 +1,11 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "aivo-hr-system"
+main = ".open-next/worker.js"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Pages 設定
-pages_build_output_dir = ".worker/static"
+[assets]
+directory = ".open-next/assets"
 
 [vars]
 ENVIRONMENT = "production"
