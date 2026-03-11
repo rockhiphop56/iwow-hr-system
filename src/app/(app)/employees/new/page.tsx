@@ -1,23 +1,31 @@
 import { EmployeeForm } from "@/components/employees/EmployeeForm";
 import { getDepartments, getJobRoles } from "@/services/departments.service";
 import { getEmployeeOptions } from "@/services/employees.service";
-import type { Department, JobRole, Employee } from "@/types/database.types";
+import { getActiveEmploymentTypes } from "@/services/employment-types.service";
+import { getActiveJobGrades } from "@/services/job-grades.service";
+import type { Department, JobRole, Employee, EmploymentType, JobGrade } from "@/types/database.types";
 
 export default async function NewEmployeePage() {
   let departments: Department[] = [];
   let roles: JobRole[] = [];
   let employees: Pick<Employee, "user_uuid" | "name">[] = [];
+  let employmentTypes: EmploymentType[] = [];
+  let jobGrades: JobGrade[] = [];
   let loadError = "";
 
   try {
-    const [d, r, e] = await Promise.all([
+    const [d, r, e, et, jg] = await Promise.all([
       getDepartments(),
       getJobRoles(),
       getEmployeeOptions(),
+      getActiveEmploymentTypes(),
+      getActiveJobGrades(),
     ]);
     departments = d;
     roles = r;
     employees = e;
+    employmentTypes = et;
+    jobGrades = jg;
   } catch (err) {
     console.error("NewEmployeePage data fetch failed:", err);
     loadError =
@@ -35,7 +43,7 @@ export default async function NewEmployeePage() {
 
       {loadError && (
         <div className="rounded-lg bg-red-500/10 p-4 text-sm text-red-400">
-          ⚠️ {loadError}
+          {loadError}
         </div>
       )}
 
@@ -43,6 +51,8 @@ export default async function NewEmployeePage() {
         departments={departments}
         roles={roles}
         employees={employees}
+        employmentTypes={employmentTypes}
+        jobGrades={jobGrades}
       />
     </div>
   );
